@@ -5,126 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TikTok Football Race</title>
     <style>
-        body { background: #000; margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
+        /* Responsive Fix: We divide the screen height among 20 countries.
+           88vh for the track / 20 = 4.4vh per lane.
+        */
+        :root { --lane-h: 4.4vh; }
 
-        /* ================= LEADERBOARD HEADER ================= */
-        .header-stats {
-            height: 50px; background: #111; display: flex; 
-            align-items: center; justify-content: center;
-            border-bottom: 2px solid #333; font-weight: bold; color: gold;
-            font-size: 20px; z-index: 100; position: relative;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        body { background: #000; margin: 0; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
+
+        /* ================= PODIUM LEADERBOARD (Horse Challenge Style) ================= */
+        .podium-container {
+            height: 12vh; background: #0a0a0a; display: flex; 
+            align-items: flex-end; justify-content: center; gap: 15px;
+            padding-bottom: 5px; border-bottom: 3px solid #222;
         }
+        .podium-spot { 
+            width: 90px; display: flex; flex-direction: column; align-items: center; 
+            background: linear-gradient(to top, #111, #333); border-radius: 10px 10px 0 0;
+            position: relative; transition: all 0.5s ease;
+        }
+        .spot-1 { height: 9vh; border: 2px solid gold; transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+        .spot-2 { height: 7vh; border: 2px solid silver; }
+        .spot-3 { height: 6vh; border: 2px solid #cd7f32; }
+
+        .podium-flag { font-size: 28px; margin-top: -25px; filter: drop-shadow(0 0 5px black); }
+        .podium-wins { font-size: 16px; color: gold; font-weight: 900; }
+        .podium-label { font-size: 10px; text-transform: uppercase; margin-bottom: 2px; color: #aaa; }
 
         /* ================= PITCH CONTAINER ========================== */
-        .race-container { 
-            width: 100%; 
-            height: calc(100vh - 50px); 
-            overflow: hidden; 
-            position: relative; 
-        }
+        .race-container { width: 100%; height: 88vh; position: relative; }
         
         .lane {
-            position: absolute; 
-            width: 100%; 
-            height: 60px; 
-            overflow: hidden;
-            transition: top 0.5s ease-in-out; 
-            left: 0; 
-            display: flex; 
-            align-items: center;
+            position: absolute; width: 100%; height: var(--lane-h);
+            transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center;
         }
 
-        /* Alternating Football Pitch Green */
+        /* Pitch Green Colors */
         .lane:nth-child(odd) { background: #1b4d1b; } 
         .lane:nth-child(even) { background: #2d702d; } 
 
-        /* Moving White Lines (Speed effect) */
+        /* Moving White Lines */
         .lane::after {
-            content: ""; position: absolute; bottom: 0; left: 0; width: 200%; height: 3px;
+            content: ""; position: absolute; bottom: 0; left: 0; width: 200%; height: 2px;
             background-image: linear-gradient(to right, white 50%, transparent 50%);
-            background-size: 80px 100%;
-            animation: lineMove 1s linear infinite;
-            opacity: 0.4;
+            background-size: 60px 100%; animation: lineMove 1s linear infinite; opacity: 0.3;
         }
+        @keyframes lineMove { 0% { transform: translateX(0); } 100% { transform: translateX(-30px); } }
 
-        @keyframes lineMove { 
-            0% { transform: translateX(0); } 
-            100% { transform: translateX(-40px); } 
-        }
-
-        /* Ticker - Country Names in Background */
+        /* Ticker - Country Names (Clean & Subtle) */
         .news-ticker {
-            position: absolute; width: 200%; white-space: nowrap;
-            font-size: 35px; font-weight: 900; color: #39FF14; 
-            text-transform: uppercase; animation: tickerMove 12s linear infinite;
-            z-index: 1; opacity: 0.15; pointer-events: none;
+            position: absolute; width: 100%; font-size: 2.5vh; font-weight: 900; 
+            color: rgba(255,255,255,0.08); text-transform: uppercase; pointer-events: none;
+            left: 20%;
         }
-        @keyframes tickerMove { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        /* THE PLAYER (RUNNER) */
-        .runner {
-            position: absolute; 
-            top: 5px; 
-            display: flex; 
-            align-items: center;
-            transition: left 0.6s cubic-bezier(0.15, 0.88, 0.3, 1); 
-            z-index: 5; /* Behind the net */
-        }
-        .flag-tail { font-size: 28px; margin-right: 8px; filter: drop-shadow(0 0 5px black); }
-        .runner-img { width: 55px; transform: scaleX(-1); }
-
-        /* TRANSPARENT NET FROM ASSETS */
-        .goal-net {
-            position: absolute; 
-            right: 0; 
-            top: 0; 
-            bottom: 0; 
-            width: 70px; 
+        /* INDIVIDUAL NET PER LANE */
+        .lane-net {
+            position: absolute; right: 0; top: 0; bottom: 0; width: 60px;
             background: url('/assets/net.png') no-repeat center right;
-            background-size: cover;
-            z-index: 10; /* In front of runners */
-            filter: drop-shadow(-5px 0 10px rgba(0,0,0,0.5));
-            border-left: 2px solid rgba(255,255,255,0.3);
+            background-size: contain; z-index: 10; opacity: 0.9;
         }
 
-        /* UI ELEMENTS */
-        .live-score {
-            position: absolute; right: 85px; top: 18px; z-index: 20;
-            font-weight: bold; font-size: 18px; color: #fff;
-            background: rgba(0,0,0,0.7); padding: 2px 12px; border-radius: 20px;
-            border: 1px solid #39FF14;
-        }
+        /* START ICON (Shows the Gift Required) */
+        .gift-hint { position: absolute; left: 10px; font-size: 2vh; z-index: 5; filter: drop-shadow(0 0 5px black); }
 
-        .wins-label {
-            position: absolute; left: 15px; font-size: 14px; color: #FFD700;
-            font-weight: bold; background: rgba(0,0,0,0.6); 
-            padding: 2px 10px; border-radius: 5px; z-index: 20;
+        /* THE RUNNER (BIG & BOLD) */
+        .runner {
+            position: absolute; height: 100%; display: flex; align-items: center;
+            transition: left 0.6s cubic-bezier(0.15, 0.88, 0.3, 1); z-index: 5;
         }
+        .runner-img { height: 110%; transform: scaleX(-1); filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.7)); }
+        .runner-flag { font-size: 2.5vh; margin-right: 5px; }
+
     </style>
 </head>
 <body>
 
-    <div class="header-stats" id="leaderboard">🏆 WAITING FOR GIFTS...</div>
-    
-    <div id="raceTrack" class="race-container">
-        <div class="goal-net"></div>
+    <div class="podium-container">
+        <div class="podium-spot spot-2" id="p2">
+            <span class="podium-flag" id="f2">🏳️</span>
+            <span class="podium-wins" id="w2">0</span>
+            <span class="podium-label">🥈 2nd</span>
+        </div>
+        <div class="podium-spot spot-1" id="p1">
+            <span class="podium-flag" id="f1">🏳️</span>
+            <span class="podium-wins" id="w1">0</span>
+            <span class="podium-label">🏆 1st</span>
+        </div>
+        <div class="podium-spot spot-3" id="p3">
+            <span class="podium-flag" id="f3">🏳️</span>
+            <span class="podium-wins" id="w3">0</span>
+            <span class="podium-label">🥉 3rd</span>
+        </div>
     </div>
+    
+    <div id="raceTrack" class="race-container"></div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const track = document.getElementById('raceTrack');
-        const board = document.getElementById('leaderboard');
 
         socket.on('updateRace', (data) => {
             const countries = data.allCountries || [];
-            
-            // 1. Update Header Leaderboard (Top 3)
-            const top3 = countries.slice(0, 3);
-            board.innerHTML = `🏆 ` + top3.map(c => `${c.flag} ${c.wins}`).join(' | ');
 
-            // 2. Render/Update Lanes
+            // 1. Update Podium
+            if (countries.length >= 3) {
+                document.getElementById('f1').innerText = countries.flag;
+                document.getElementById('w1').innerText = countries.wins;
+                document.getElementById('f2').innerText = countries.flag;
+                document.getElementById('w2').innerText = countries.wins;
+                document.getElementById('f3').innerText = countries.flag;
+                document.getElementById('w3').innerText = countries.wins;
+            }
+
+            // 2. Render Lanes
             countries.forEach((c, index) => {
                 let lane = document.getElementById(`lane-${c.id}`);
                 
@@ -135,16 +130,15 @@
                     track.appendChild(lane);
                 }
 
-                // Rank countries by moving their lane vertical position
-                lane.style.top = `${index * 60}px`;
+                // Smooth vertical positioning based on rank
+                lane.style.top = `${index * 4.4}vh`;
 
-                // Update content of each lane
                 lane.innerHTML = `
-                    <div class="news-ticker">${c.name} • ${c.name} • ${c.name}</div>
-                    <div class="wins-label">WINS: ${c.wins}</div>
-                    <div class="live-score">${c.score % 50}/50</div>
-                    <div class="runner" id="runner-${c.id}" style="left: calc(${c.currentPos}% + 10px)">
-                        <div class="flag-tail">${c.flag}</div>
+                    <div class="news-ticker">${c.name}</div>
+                    <div class="gift-hint">${c.giftIcon || '🎁'}</div>
+                    <div class="lane-net"></div>
+                    <div class="runner" id="runner-${c.id}" style="left: calc(${c.currentPos}% + 15px)">
+                        <div class="runner-flag">${c.flag}</div>
                         <img src="/assets/fast.gif" class="runner-img">
                     </div>
                 `;
