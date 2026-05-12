@@ -1,67 +1,103 @@
+const { TikTokLive } = require('@tiktool/live');
 const express = require('express');
-const { WebcastPushConnection } = require('tiktok-live-connector');
+const http = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
+
 const app = express();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const server = http.createServer(app);
+const io = new Server(server);
 
-// --- CONFIGURATION PANEL ---
-const TIKTOK_USERNAME = "cevvgg"; // Change this to a LIVE user
-const WIN_DISTANCE = 100; 
+// ===============================
+// SETTINGS
+// ===============================
+const TIKTOOL_API_KEY = "tk_91ec88c2870958d10d58fbcfe4e73840d018705e201a96c1";
+const TARGET_USERNAME = ""; // Put your username here
+const POINTS_PER_LAP = 50;
 
-let COUNTRIES = [
-    { id: 1, name: "Nigeria", flag: "🇳🇬", gift: "Rose", wins: 0, pos: 0 },
-    { id: 2, name: "Ghana", flag: "🇬🇭", gift: "Coffee", wins: 0, pos: 0 },
-    { id: 3, name: "USA", flag: "🇺🇸", gift: "Football", wins: 0, pos: 0 },
-    { id: 4, name: "UK", flag: "🇬🇧", gift: "Ice Cream", wins: 0, pos: 0 }
+// All country data is now right here - no config.json needed!
+let countriesList = [
+    { id: 1, name: "Nigeria", flag: "🇳🇬", gift: "Rose", wins: 0, score: 0, currentPos: 0 },
+    { id: 2, name: "Ghana", flag: "🇬🇭", gift: "Coffee", wins: 0, score: 0, currentPos: 0 },
+    { id: 3, name: "USA", flag: "🇺🇸", gift: "Football", wins: 0, score: 0, currentPos: 0 },
+    { id: 4, name: "UK", flag: "🇬🇧", gift: "Ice Cream", wins: 0, score: 0, currentPos: 0 },
+    { id: 5, name: "Brazil", flag: "🇧🇷", gift: "Finger Heart", wins: 0, score: 0, currentPos: 0 }
 ];
 
-app.use(express.static('public'));
-app.use('/assets', express.static('assets'));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Set up connection with specific mobile headers to avoid timeouts
-let tiktokConn = new WebcastPushConnection(TIKTOK_USERNAME, {
-    processInitialData: false,
-    enableExtendedGiftInfo: true,
-    requestOptions: {
-        timeout: 20000 // Increase timeout to 20 seconds for slow mobile data
-    }
+// The advanced tracker from the other code
+let giftComboTracker = {};
+
+// ===============================
+// TIKTOK CONNECTION LOGIC
+// ===============================
+const tiktok = new TikTokLive({
+    uniqueId: TARGET_USERNAME,
+    apiKey: TIKTOOL_API_KEY,
+    autoReconnect: true,
+    signServerUrl: "https://api.tik.tools"
 });
 
-// Better Connection Logic
-function connectToTikTok() {
-    tiktokConn.connect()
-        .then(state => {
-            console.log(`✅ Success! Connected to ${TIKTOK_USERNAME} (Room: ${state.roomId})`);
-        })
-        .catch(err => {
-            console.error("❌ Connection failed. Retrying in 10 seconds...");
-            setTimeout(connectToTikTok, 10000); 
-        });
-}
-
-connectToTikTok();
-
-tiktokConn.on('gift', (data) => {
-    let country = COUNTRIES.find(c => c.gift === data.giftName);
-    if (country) {
-        // Move forward based on gift amount
-        country.pos += data.repeatCount; 
+tiktok.on('gift', (data) => {
+    try {
+        if (!data) return;
         
-        if (country.pos >= WIN_DISTANCE) {
-            country.wins += 1;
-            country.pos = 0; 
-            io.emit('winner_alert', { name: country.name, wins: country.wins });
+        const trackingId = `${data.userId}_${data.giftName}`;
+        let countToProcess = 0;
+
+        // Advanced Gift Checking Logic
+        if (data.repeatEnd) {
+            countToProcess = data.repeatCount - (giftComboTracker[trackingId] || 0);
+            delete giftComboTracker[trackingId];
+        } else {
+            countToProcess = data.repeatCount - (giftComboTracker[trackingId] || 0);
+            giftComboTracker[trackingId] = data.repeatCount;
         }
-        io.emit('update_race', COUNTRIES);
+
+        if (countToProcess <= 0) return;
+
+        const country = countriesList.find(c => c.gift.toLowerCase() === data.giftName.toLowerCase());
+        if (!country) return;
+
+        // Update the stats
+        country.score += countToProcess;
+        
+        // Update Wins (Leaderboard rank)
+        country.wins = Math.floor(country.score / POINTS_PER_LAP);
+        
+        // Update Visual Position (0-85% for the pitch)
+        country.currentPos = ((country.score % POINTS_PER_LAP) / POINTS_PER_LAP) * 85;
+
+        console.log(`🎁 GIFT: ${data.uniqueId} sent ${countToProcess}x ${data.giftName} for ${country.name}`);
+
+        // Sort by Wins first, then current score
+        const sortedRace = [...countriesList].sort((a, b) => {
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            return b.score - a.score;
+        });
+
+        io.emit('updateRace', {
+            allCountries: sortedRace,
+            senderName: data.uniqueId
+        });
+
+    } catch (err) {
+        console.error("❌ GIFT ERROR:", err);
     }
 });
 
-// Handle if TikTok kicks you out
-tiktokConn.on('disconnected', () => {
-    console.log("⚠️ Disconnected from TikTok. Reconnecting...");
-    connectToTikTok();
+tiktok.on('connected', () => console.log(`✅ Game Connected: ${TARGET_USERNAME}`));
+tiktok.on('error', (err) => console.error("❌ TIKTOK ERROR:", err));
+
+tiktok.connect().catch(() => {});
+
+io.on('connection', (socket) => {
+    socket.emit('updateRace', { allCountries: countriesList });
 });
 
-http.listen(3000, () => {
-    console.log('🚀 Server active at http://localhost:3000');
+server.listen(3000, () => {
+    console.log("🚀 SERVER READY: http://localhost:3000");
 });
+                
