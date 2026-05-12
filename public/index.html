@@ -101,52 +101,51 @@
     
     <div id="raceTrack" class="race-container"></div>
 
-        <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        const track = document.getElementById('raceTrack');
+      <script>
+    const socket = io();
+    const track = document.getElementById('raceTrack');
 
-        socket.on('updateRace', (data) => {
-            const countries = data.allCountries || [];
+    socket.on('updateRace', (data) => {
+        const countries = data.allCountries || [];
 
-            // ✅ FIX: Update Podium with specific index numbers
-            if (countries.length >= 3) {
-                // First Place
-                document.getElementById('f1').innerText = countries.flag;
-                document.getElementById('w1').innerText = countries.wins;
-                // Second Place
-                document.getElementById('f2').innerText = countries.flag;
-                document.getElementById('w2').innerText = countries.wins;
-                // Third Place
-                document.getElementById('f3').innerText = countries.flag;
-                document.getElementById('w3').innerText = countries.wins;
+        // ✅ PODIUM UPDATE: This maps the top 3 champions to the steps
+        if (countries.length >= 3) {
+            // 1st Place (Middle)
+            document.getElementById('f1').innerText = countries.flag;
+            document.getElementById('w1').innerText = countries.wins + " WINS";
+            
+            // 2nd Place (Left)
+            document.getElementById('f2').innerText = countries.flag;
+            document.getElementById('w2').innerText = countries.wins + " WINS";
+            
+            // 3rd Place (Right)
+            document.getElementById('f3').innerText = countries.flag;
+            document.getElementById('w3').innerText = countries.wins + " WINS";
+        }
+
+        // Render the tracks
+        countries.forEach((c, index) => {
+            let lane = document.getElementById(`lane-${c.id}`);
+            if (!lane) {
+                lane = document.createElement('div');
+                lane.className = 'lane';
+                lane.id = `lane-${c.id}`;
+                track.appendChild(lane);
             }
 
-            // 2. Render Lanes
-            countries.forEach((c, index) => {
-                let lane = document.getElementById(`lane-${c.id}`);
-                
-                if (!lane) {
-                    lane = document.createElement('div');
-                    lane.className = 'lane';
-                    lane.id = `lane-${c.id}`;
-                    track.appendChild(lane);
-                }
+            // The tracks stay in rank order (Top 1 at the top of screen)
+            lane.style.top = `${index * 4.4}vh`;
 
-                lane.style.top = `${index * 4.4}vh`;
-
-                // ✅ FIX: Adjusted starting position (45px) so flag doesn't block gift icon
-                lane.innerHTML = `
-                    <div class="news-ticker">${c.name}</div>
-                    <div class="gift-hint">${c.giftIcon || '🎁'}</div>
-                    <div class="lane-net"></div>
-                    <div class="runner" id="runner-${c.id}" style="left: calc(${c.currentPos}% + 45px)">
-                        <div class="runner-flag">${c.flag}</div>
-                        <img src="/assets/fast.gif" class="runner-img">
-                    </div>
-                `;
-            });
+            lane.innerHTML = `
+                <div class="gift-hint">${c.giftIcon}</div>
+                <div class="lane-net"></div>
+                <div class="runner" style="left: calc(${c.currentPos}% + 50px)">
+                    <div class="runner-flag">${c.flag}</div>
+                    <img src="/assets/fast.gif" class="runner-img">
+                </div>
+            `;
         });
-    </script>
+    });
+</script>
 </body>
 </html>
