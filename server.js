@@ -86,7 +86,7 @@ tiktok.on('gift', (data) => {
         // Update Visual Position (0-85% for the pitch)
         country.currentPos = ((country.score % POINTS_PER_LAP) / POINTS_PER_LAP) * 85;
 
-        console.log(`🎁 GIFT: ${data.uniqueId} sent ${countToProcess}x ${data.giftName} for ${country.name}`);
+        console.log(`🎁 GIFT: ${data.user.uniqueId} sent ${countToProcess}x ${data.giftName} for ${country.name}`);
 
         // Sort by Wins first, then current score
         const sortedRace = [...countriesList].sort((a, b) => {
