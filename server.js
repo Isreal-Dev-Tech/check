@@ -57,33 +57,48 @@ const tiktok = new TikTokLive({
 });
 
 tiktok.on('gift', (data) => {
-    // ... [keep your combo tracking code here] ...
+    try {
+        if (!data) return;
+        
+        const trackingId = `${data.userId}_${data.giftName}`;
+        let countToProcess = 0;
 
-    const country = countriesList.find(c => c.gift.toLowerCase() === data.giftName.toLowerCase());
-    if (!country) return;
+        if (data.repeatEnd) {
+            countToProcess = data.repeatCount - (giftComboTracker[trackingId] || 0);
+            delete giftComboTracker[trackingId];
+        } else {
+            countToProcess = data.repeatCount - (giftComboTracker[trackingId] || 0);
+            giftComboTracker[trackingId] = data.repeatCount;
+        }
 
-    // 1. Add points
-    country.score += countToProcess;
-    
-    // 2. Calculate Wins (Every 50 points = 1 Win)
-    // This is what updates the podium!
-    country.wins = Math.floor(country.score / POINTS_PER_LAP);
-    
-    // 3. Update Position for the runner (0-85%)
-    country.currentPos = ((country.score % POINTS_PER_LAP) / POINTS_PER_LAP) * 85;
+        if (countToProcess <= 0) return;
 
-    // 4. THE FIX: Sort strictly by WINS first. 
-    // This ensures the person with 5 wins stays at 1st place 
-    // even if they just started a new lap.
-    const sortedByChampions = [...countriesList].sort((a, b) => {
-        if (b.wins !== a.wins) return b.wins - a.wins; // Highest wins first
-        return b.score - a.score; // If wins are tied, who is further in the current lap
-    });
+        const country = countriesList.find(c => c.gift.toLowerCase() === data.giftName.toLowerCase());
+        if (!country) return;
 
-    io.emit('updateRace', {
-        allCountries: sortedByChampions
-    });
+        // 1. Update points & wins
+        country.score += countToProcess;
+        country.wins = Math.floor(country.score / POINTS_PER_LAP);
+        country.currentPos = ((country.score % POINTS_PER_LAP) / POINTS_PER_LAP) * 85;
+
+        // 2. CREATE THE TOP RANK (This is for the Podium only)
+        // We sort a COPY so the original tracks don't move
+        const topRank = [...countriesList].sort((a, b) => {
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            return b.score - a.score;
+        });
+
+        // 3. SEND BOTH: The original list for tracks, and the sorted list for the podium
+        io.emit('updateRace', {
+            allCountries: countriesList, // Stays in original 1-20 order
+            topRank: topRank             // Sorted for the leaderboard
+        });
+
+    } catch (err) {
+        console.error("❌ GIFT ERROR:", err);
+    }
 });
+            
 
 
 
