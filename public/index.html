@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TikTok Football Race</title>
     <style>
-        /* Responsive Fix: We divide the screen height among 20 countries.
-           88vh for the track / 20 = 4.4vh per lane.
-        */
+        /* Responsive Fix: 20 lanes fit the screen height */
         :root { --lane-h: 4.4vh; }
 
         body { background: #000; margin: 0; overflow: hidden; font-family: 'Arial Black', sans-serif; color: white; }
 
-        /* ================= PODIUM LEADERBOARD (Horse Challenge Style) ================= */
+        /* ================= PODIUM LEADERBOARD (Top 3 Champions) ================= */
         .podium-container {
             height: 12vh; background: #0a0a0a; display: flex; 
             align-items: flex-end; justify-content: center; gap: 15px;
@@ -28,7 +26,7 @@
         .spot-3 { height: 6vh; border: 2px solid #cd7f32; }
 
         .podium-flag { font-size: 28px; margin-top: -25px; filter: drop-shadow(0 0 5px black); }
-        .podium-wins { font-size: 16px; color: gold; font-weight: 900; }
+        .podium-wins { font-size: 14px; color: gold; font-weight: 900; }
         .podium-label { font-size: 10px; text-transform: uppercase; margin-bottom: 2px; color: #aaa; }
 
         /* ================= PITCH CONTAINER ========================== */
@@ -52,7 +50,7 @@
         }
         @keyframes lineMove { 0% { transform: translateX(0); } 100% { transform: translateX(-30px); } }
 
-        /* Ticker - Country Names (Clean & Subtle) */
+        /* Ticker - Country Names (Subtle) */
         .news-ticker {
             position: absolute; width: 100%; font-size: 2.5vh; font-weight: 900; 
             color: rgba(255,255,255,0.08); text-transform: uppercase; pointer-events: none;
@@ -66,10 +64,10 @@
             background-size: contain; z-index: 10; opacity: 0.9;
         }
 
-        /* START ICON (Shows the Gift Required) */
+        /* START ICON */
         .gift-hint { position: absolute; left: 10px; font-size: 2vh; z-index: 5; filter: drop-shadow(0 0 5px black); }
 
-        /* THE RUNNER (BIG & BOLD) */
+        /* THE RUNNER (Man running with ball) */
         .runner {
             position: absolute; height: 100%; display: flex; align-items: center;
             transition: left 0.6s cubic-bezier(0.15, 0.88, 0.3, 1); z-index: 5;
@@ -82,46 +80,50 @@
 <body>
 
     <div class="podium-container">
-        <div class="podium-spot spot-2" id="p2">
+        <div class="podium-spot spot-2">
             <span class="podium-flag" id="f2">🏳️</span>
-            <span class="podium-wins" id="w2">0</span>
+            <span class="podium-wins" id="w2">0 WINS</span>
             <span class="podium-label">🥈 2nd</span>
         </div>
-        <div class="podium-spot spot-1" id="p1">
+        <div class="podium-spot spot-1">
             <span class="podium-flag" id="f1">🏳️</span>
-            <span class="podium-wins" id="w1">0</span>
+            <span class="podium-wins" id="w1">0 WINS</span>
             <span class="podium-label">🏆 1st</span>
         </div>
-        <div class="podium-spot spot-3" id="p3">
+        <div class="podium-spot spot-3">
             <span class="podium-flag" id="f3">🏳️</span>
-            <span class="podium-wins" id="w3">0</span>
+            <span class="podium-wins" id="w3">0 WINS</span>
             <span class="podium-label">🥉 3rd</span>
         </div>
     </div>
     
     <div id="raceTrack" class="race-container"></div>
 
-      <script>
-    const socket = io();
-    const track = document.getElementById('raceTrack');
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const track = document.getElementById('raceTrack');
 
-            socket.on('updateRace', (data) => {
+        socket.on('updateRace', (data) => {
             const countries = data.allCountries || [];
             const topRank = data.topRank || [];
 
-            // ✅ PODIUM: Uses the TopRank data
+            // ✅ UPDATE PODIUM: Uses index,, to pick winners
             if (topRank.length >= 3) {
+                // 1st Place (Center)
                 document.getElementById('f1').innerText = topRank.flag;
                 document.getElementById('w1').innerText = topRank.wins + " WINS";
                 
+                // 2nd Place (Left)
                 document.getElementById('f2').innerText = topRank.flag;
                 document.getElementById('w2').innerText = topRank.wins + " WINS";
                 
+                // 3rd Place (Right)
                 document.getElementById('f3').innerText = topRank.flag;
                 document.getElementById('w3').innerText = topRank.wins + " WINS";
             }
 
-            // ✅ RACE TRACKS: Uses the original order (index * 4.4vh)
+            // ✅ UPDATE RACE TRACKS: Keeps Nigeria at the top, Ghana next, etc.
             countries.forEach((c, index) => {
                 let lane = document.getElementById(`lane-${c.id}`);
                 
@@ -132,12 +134,12 @@
                     track.appendChild(lane);
                 }
 
-                // Nigeria stays at index 0, Ghana at index 1, etc.
+                // Vertical position never changes (Nigeria always top)
                 lane.style.top = `${index * 4.4}vh`;
 
                 lane.innerHTML = `
                     <div class="news-ticker">${c.name}</div>
-                    <div class="gift-hint">${c.giftIcon}</div>
+                    <div class="gift-hint">${c.giftIcon || '🎁'}</div>
                     <div class="lane-net"></div>
                     <div class="runner" style="left: calc(${c.currentPos}% + 50px)">
                         <div class="runner-flag">${c.flag}</div>
@@ -146,6 +148,6 @@
                 `;
             });
         });
-</script>
+    </script>
 </body>
 </html>
