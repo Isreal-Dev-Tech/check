@@ -5,7 +5,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
 // --- CONFIGURATION PANEL ---
-const TIKTOK_USERNAME = "fasasi_isreal"; // Change this to a LIVE user
+const TIKTOK_USERNAME = "cevvgg"; // Change this to a LIVE user
 const WIN_DISTANCE = 100; 
 
 let COUNTRIES = [
