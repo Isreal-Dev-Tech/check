@@ -105,47 +105,47 @@
     const socket = io();
     const track = document.getElementById('raceTrack');
 
-    socket.on('updateRace', (data) => {
-        const countries = data.allCountries || [];
+            socket.on('updateRace', (data) => {
+            const countries = data.allCountries || [];
+            const topRank = data.topRank || [];
 
-        // ✅ PODIUM UPDATE: This maps the top 3 champions to the steps
-        if (countries.length >= 3) {
-            // 1st Place (Middle)
-            document.getElementById('f1').innerText = countries.flag;
-            document.getElementById('w1').innerText = countries.wins + " WINS";
-            
-            // 2nd Place (Left)
-            document.getElementById('f2').innerText = countries.flag;
-            document.getElementById('w2').innerText = countries.wins + " WINS";
-            
-            // 3rd Place (Right)
-            document.getElementById('f3').innerText = countries.flag;
-            document.getElementById('w3').innerText = countries.wins + " WINS";
-        }
-
-        // Render the tracks
-        countries.forEach((c, index) => {
-            let lane = document.getElementById(`lane-${c.id}`);
-            if (!lane) {
-                lane = document.createElement('div');
-                lane.className = 'lane';
-                lane.id = `lane-${c.id}`;
-                track.appendChild(lane);
+            // ✅ PODIUM: Uses the TopRank data
+            if (topRank.length >= 3) {
+                document.getElementById('f1').innerText = topRank.flag;
+                document.getElementById('w1').innerText = topRank.wins + " WINS";
+                
+                document.getElementById('f2').innerText = topRank.flag;
+                document.getElementById('w2').innerText = topRank.wins + " WINS";
+                
+                document.getElementById('f3').innerText = topRank.flag;
+                document.getElementById('w3').innerText = topRank.wins + " WINS";
             }
 
-            // The tracks stay in rank order (Top 1 at the top of screen)
-            lane.style.top = `${index * 4.4}vh`;
+            // ✅ RACE TRACKS: Uses the original order (index * 4.4vh)
+            countries.forEach((c, index) => {
+                let lane = document.getElementById(`lane-${c.id}`);
+                
+                if (!lane) {
+                    lane = document.createElement('div');
+                    lane.className = 'lane';
+                    lane.id = `lane-${c.id}`;
+                    track.appendChild(lane);
+                }
 
-            lane.innerHTML = `
-                <div class="gift-hint">${c.giftIcon}</div>
-                <div class="lane-net"></div>
-                <div class="runner" style="left: calc(${c.currentPos}% + 50px)">
-                    <div class="runner-flag">${c.flag}</div>
-                    <img src="/assets/fast.gif" class="runner-img">
-                </div>
-            `;
+                // Nigeria stays at index 0, Ghana at index 1, etc.
+                lane.style.top = `${index * 4.4}vh`;
+
+                lane.innerHTML = `
+                    <div class="news-ticker">${c.name}</div>
+                    <div class="gift-hint">${c.giftIcon}</div>
+                    <div class="lane-net"></div>
+                    <div class="runner" style="left: calc(${c.currentPos}% + 50px)">
+                        <div class="runner-flag">${c.flag}</div>
+                        <img src="/assets/fast.gif" class="runner-img">
+                    </div>
+                `;
+            });
         });
-    });
 </script>
 </body>
 </html>
