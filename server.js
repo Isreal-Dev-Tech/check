@@ -63,7 +63,6 @@ tiktok.on('gift', (data) => {
         const trackingId = `${data.userId}_${data.giftName}`;
         let countToProcess = 0;
 
-        // Advanced Gift Checking Logic
         if (data.repeatEnd) {
             countToProcess = data.repeatCount - (giftComboTracker[trackingId] || 0);
             delete giftComboTracker[trackingId];
@@ -77,32 +76,37 @@ tiktok.on('gift', (data) => {
         const country = countriesList.find(c => c.gift.toLowerCase() === data.giftName.toLowerCase());
         if (!country) return;
 
-        // Update the stats
+        // 1. Add points
         country.score += countToProcess;
         
-        // Update Wins (Leaderboard rank)
+        // 2. Calculate New Wins
+        const oldWins = country.wins;
         country.wins = Math.floor(country.score / POINTS_PER_LAP);
         
-        // Update Visual Position (0-85% for the pitch)
+        // 3. Check if they just finished a lap (For that +1 feel)
+        if (country.wins > oldWins) {
+            console.log(`🏆 ${country.name} JUST WON A LAP! Total Wins: ${country.wins}`);
+        }
+
+        // 4. Update Position (0-85%)
+        // When they hit exactly 50, this becomes 0, starting them back at the left!
         country.currentPos = ((country.score % POINTS_PER_LAP) / POINTS_PER_LAP) * 85;
 
-        console.log(`🎁 GIFT: ${data.user.uniqueId} sent ${countToProcess}x ${data.giftName} for ${country.name}`);
-
-        // Sort by Wins first, then current score
+        // 5. SORT: Rank by Wins (Primary) and Score (Secondary)
         const sortedRace = [...countriesList].sort((a, b) => {
             if (b.wins !== a.wins) return b.wins - a.wins;
             return b.score - a.score;
         });
 
         io.emit('updateRace', {
-            allCountries: sortedRace,
-            senderName: data.uniqueId
+            allCountries: sortedRace
         });
 
     } catch (err) {
         console.error("❌ GIFT ERROR:", err);
     }
 });
+
 
 tiktok.on('connected', () => console.log(`✅ Game Connected: ${TARGET_USERNAME}`));
 tiktok.on('error', (err) => console.error("❌ TIKTOK ERROR:", err));
