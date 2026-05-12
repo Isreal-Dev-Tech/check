@@ -99,7 +99,7 @@
     
     <div id="raceTrack" class="race-container"></div>
 
-     <script src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const track = document.getElementById('raceTrack');
@@ -108,8 +108,7 @@
             const countries = data.allCountries || [];
             const topRank = data.topRank || [];
 
-            // ✅ THE FIX: Protect each rank individually
-            // This way, if 2nd is missing, it doesn't stop 1st from showing.
+            // ✅ FIXED LOGIC: Using,, to target specific ranks
             
             // 1st Place Logic
             if (topRank && topRank) {
@@ -138,7 +137,7 @@
                 document.getElementById('w3').innerText = "0 WINS";
             }
 
-            // ✅ RACE TRACKS (Always stays in fixed order)
+            // ✅ RACE TRACKS
             countries.forEach((c, index) => {
                 let lane = document.getElementById(`lane-${c.id}`);
                 
