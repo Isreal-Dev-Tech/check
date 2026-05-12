@@ -99,7 +99,7 @@
     
     <div id="raceTrack" class="race-container"></div>
 
-    <script src="/socket.io/socket.io.js"></script>
+     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const track = document.getElementById('raceTrack');
@@ -108,22 +108,37 @@
             const countries = data.allCountries || [];
             const topRank = data.topRank || [];
 
-            // ✅ UPDATE PODIUM: Uses index,, to pick winners
-            if (topRank.length >= 3) {
-                // 1st Place (Center)
+            // ✅ THE FIX: Protect each rank individually
+            // This way, if 2nd is missing, it doesn't stop 1st from showing.
+            
+            // 1st Place Logic
+            if (topRank && topRank) {
                 document.getElementById('f1').innerText = topRank.flag;
                 document.getElementById('w1').innerText = topRank.wins + " WINS";
-                
-                // 2nd Place (Left)
-                document.getElementById('f2').innerText = topRank.flag;
-                document.getElementById('w2').innerText = topRank.wins + " WINS";
-                
-                // 3rd Place (Right)
-                document.getElementById('f3').innerText = topRank.flag;
-                document.getElementById('w3').innerText = topRank.wins + " WINS";
+            } else {
+                document.getElementById('f1').innerText = "🏁";
+                document.getElementById('w1').innerText = "0 WINS";
             }
 
-            // ✅ UPDATE RACE TRACKS: Keeps Nigeria at the top, Ghana next, etc.
+            // 2nd Place Logic
+            if (topRank && topRank) {
+                document.getElementById('f2').innerText = topRank.flag;
+                document.getElementById('w2').innerText = topRank.wins + " WINS";
+            } else {
+                document.getElementById('f2').innerText = "🏁";
+                document.getElementById('w2').innerText = "0 WINS";
+            }
+
+            // 3rd Place Logic
+            if (topRank && topRank) {
+                document.getElementById('f3').innerText = topRank.flag;
+                document.getElementById('w3').innerText = topRank.wins + " WINS";
+            } else {
+                document.getElementById('f3').innerText = "🏁";
+                document.getElementById('w3').innerText = "0 WINS";
+            }
+
+            // ✅ RACE TRACKS (Always stays in fixed order)
             countries.forEach((c, index) => {
                 let lane = document.getElementById(`lane-${c.id}`);
                 
@@ -134,7 +149,6 @@
                     track.appendChild(lane);
                 }
 
-                // Vertical position never changes (Nigeria always top)
                 lane.style.top = `${index * 4.4}vh`;
 
                 lane.innerHTML = `
