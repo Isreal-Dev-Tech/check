@@ -1,4 +1,4 @@
-const { TikTokLive } = require('@tiktool/live');
+const { TikTokLive } = require('./node_modules/@tiktool/live/dist/index.js');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
