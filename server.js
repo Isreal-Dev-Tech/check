@@ -18,11 +18,27 @@ const POINTS_PER_LAP = 50;
 // All country data is now right here - no config.json needed!
 let countriesList = [
     { id: 1, name: "Nigeria", flag: "🇳🇬", gift: "Rose", wins: 0, score: 0, currentPos: 0 },
-    { id: 2, name: "Ghana", flag: "🇬🇭", gift: "Coffee", wins: 0, score: 0, currentPos: 0 },
-    { id: 3, name: "USA", flag: "🇺🇸", gift: "Football", wins: 0, score: 0, currentPos: 0 },
-    { id: 4, name: "UK", flag: "🇬🇧", gift: "Ice Cream", wins: 0, score: 0, currentPos: 0 },
-    { id: 5, name: "Brazil", flag: "🇧🇷", gift: "Finger Heart", wins: 0, score: 0, currentPos: 0 }
+    { id: 2, name: "Ghana", flag: "🇬🇭", gift: "Finger Heart", wins: 0, score: 0, currentPos: 0 },
+    { id: 3, name: "South Africa", flag: "🇿🇦", gift: "TikTok", wins: 0, score: 0, currentPos: 0 },
+    { id: 4, name: "Kenya", flag: "🇰🇪", gift: "GG", wins: 0, score: 0, currentPos: 0 },
+    { id: 5, name: "Egypt", flag: "🇪🇬", gift: "Ice Cream", wins: 0, score: 0, currentPos: 0 },
+    { id: 6, name: "Morocco", flag: "🇲🇦", gift: "Doughnut", wins: 0, score: 0, currentPos: 0 },
+    { id: 7, name: "Senegal", flag: "🇸🇳", gift: "Heart Me", wins: 0, score: 0, currentPos: 0 },
+    { id: 8, name: "Ethiopia", flag: "🇪🇹", gift: "Panda", wins: 0, score: 0, currentPos: 0 },
+    { id: 9, name: "Algeria", flag: "🇩🇿", gift: "Chili", wins: 0, score: 0, currentPos: 0 },
+    { id: 10, name: "Uganda", flag: "🇺🇬", gift: "Mic", wins: 0, score: 0, currentPos: 0 },
+    { id: 11, name: "Ivory Coast", flag: "🇨🇮", gift: "Coffee", wins: 0, score: 0, currentPos: 0 },
+    { id: 12, name: "Cameroon", flag: "🇨🇲", gift: "Baseball", wins: 0, score: 0, currentPos: 0 },
+    { id: 13, name: "Rwanda", flag: "🇷🇼", gift: "Tennis", wins: 0, score: 0, currentPos: 0 },
+    { id: 14, name: "Tanzania", flag: "🇹🇿", gift: "Fire", wins: 0, score: 0, currentPos: 0 },
+    { id: 15, name: "Angola", flag: "🇦🇴", gift: "Hand Wave", wins: 0, score: 0, currentPos: 0 },
+    { id: 16, name: "Tunisia", flag: "🇹🇳", gift: "Paper Crane", wins: 0, score: 0, currentPos: 0 },
+    { id: 17, name: "Mali", flag: "🇲🇱", gift: "Football", wins: 0, score: 0, currentPos: 0 },
+    { id: 18, name: "DR Congo", flag: "🇨🇩", gift: "Lightning", wins: 0, score: 0, currentPos: 0 },
+    { id: 19, name: "Burkina Faso", flag: "🇧🇫", gift: "Gamepad", wins: 0, score: 0, currentPos: 0 },
+    { id: 20, name: "Zambia", flag: "🇿🇲", gift: "Diamond", wins: 0, score: 0, currentPos: 0 }
 ];
+
 
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use(express.static(path.join(__dirname, 'public')));
