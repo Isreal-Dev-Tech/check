@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Football Race Live</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { margin: 0; background: #000; font-family: sans-serif; overflow: hidden; }
+        
+        /* Leaderboard Header */
+        #leaderboard {
+            height: 60px; background: #111; display: flex; 
+            justify-content: space-around; align-items: center;
+            border-bottom: 2px solid #333; color: gold; font-weight: bold;
+        }
+
+        .pitch { position: relative; width: 100%; height: calc(100vh - 60px); }
+
+        .lane {
+            height: 45px; width: 100%; position: relative;
+            display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .lane:nth-child(odd) { background: #1b4d1b; }
+        .lane:nth-child(even) { background: #2d702d; }
+
+        /* Moving Grass Line */
+        .lane::after {
+            content: ""; position: absolute; bottom: 0; width: 200%; height: 2px;
+            background: repeating-linear-gradient(90deg, #fff, #fff 10px, transparent 10px, transparent 20px);
+            animation: move 1s linear infinite; opacity: 0.3;
+        }
+        @keyframes move { from { transform: translateX(0); } to { transform: translateX(-20px); } }
+
+        .bg-text {
+            position: absolute; left: 20px; font-size: 30px; 
+            font-weight: 900; color: #39FF14; opacity: 0.2; text-transform: uppercase;
+        }
+
+        .goal-net {
+            position: absolute; right: 0; top: 0; bottom: 0; width: 50px;
+            background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px);
+            border-left: 4px dashed white; z-index: 10;
+        }
+
+        .runner {
+            position: absolute; height: 40px; transition: left 0.3s linear;
+            display: flex; align-items: center; z-index: 20;
+        }
+        .runner img { height: 100%; transform: scaleX(-1); }
+        .runner-flag { font-size: 20px; margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <div id="leaderboard">TOP PLAYERS: Loading...</div>
+    <div class="pitch" id="game-pitch">
+        <div class="goal-net"></div>
+    </div>
+
+    <script>
+        const socket = io();
+        const pitch = document.getElementById('game-pitch');
+        const board = document.getElementById('leaderboard');
+
+        socket.on('update_race', (countries) => {
+            // Update Leaderboard Text
+            const top = [...countries].sort((a,b) => b.wins - a.wins).slice(0, 3);
+            board.innerHTML = top.map(c => `<span>${c.flag} ${c.name}: ${c.wins} Wins</span>`).join('');
+
+            // Update Lanes
+            countries.forEach((c, i) => {
+                let div = document.getElementById(`lane-${c.id}`);
+                if (!div) {
+                    div = document.createElement('div');
+                    div.id = `lane-${c.id}`;
+                    div.className = 'lane';
+                    div.innerHTML = `<div class="bg-text">${c.name}</div><div class="runner" id="run-${c.id}"><span class="runner-flag">${c.flag}</span><img src="/assets/fast.gif"></div>`;
+                    pitch.appendChild(div);
+                }
+                document.getElementById(`run-${c.id}`).style.left = c.pos + "%";
+            });
+        });
+    </script>
+</body>
+</html>
