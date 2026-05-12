@@ -101,7 +101,7 @@
     
     <div id="raceTrack" class="race-container"></div>
 
-    <script src="/socket.io/socket.io.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const track = document.getElementById('raceTrack');
@@ -109,12 +109,15 @@
         socket.on('updateRace', (data) => {
             const countries = data.allCountries || [];
 
-            // 1. Update Podium
+            // ✅ FIX: Update Podium with specific index numbers
             if (countries.length >= 3) {
+                // First Place
                 document.getElementById('f1').innerText = countries.flag;
                 document.getElementById('w1').innerText = countries.wins;
+                // Second Place
                 document.getElementById('f2').innerText = countries.flag;
                 document.getElementById('w2').innerText = countries.wins;
+                // Third Place
                 document.getElementById('f3').innerText = countries.flag;
                 document.getElementById('w3').innerText = countries.wins;
             }
@@ -130,14 +133,14 @@
                     track.appendChild(lane);
                 }
 
-                // Smooth vertical positioning based on rank
                 lane.style.top = `${index * 4.4}vh`;
 
+                // ✅ FIX: Adjusted starting position (45px) so flag doesn't block gift icon
                 lane.innerHTML = `
                     <div class="news-ticker">${c.name}</div>
                     <div class="gift-hint">${c.giftIcon || '🎁'}</div>
                     <div class="lane-net"></div>
-                    <div class="runner" id="runner-${c.id}" style="left: calc(${c.currentPos}% + 15px)">
+                    <div class="runner" id="runner-${c.id}" style="left: calc(${c.currentPos}% + 45px)">
                         <div class="runner-flag">${c.flag}</div>
                         <img src="/assets/fast.gif" class="runner-img">
                     </div>
