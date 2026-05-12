@@ -1,0 +1,17 @@
+{
+  "name": "tiktok-football-race",
+  "version": "1.0.0",
+  "description": "Interactive TikTok Live Football Race",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "tiktok-live-connector": "^1.1.0"
+  },
+  "author": "Fasasi Isreal Abiola",
+  "license": "ISC"
+}
