@@ -13,7 +13,7 @@ const io = new Server(server);
 // ===============================
 const TIKTOOL_API_KEY = "tk_91ec88c2870958d10d58fbcfe4e73840d018705e201a96c1";
 const TARGET_USERNAME = "mynameanabel"; // Put your username here
-const POINTS_PER_LAP = 20;
+const POINTS_PER_LAP = 50;
 
 // All country data is now right here - no config.json needed!
 let countriesList = [
