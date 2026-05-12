@@ -57,55 +57,34 @@ const tiktok = new TikTokLive({
 });
 
 tiktok.on('gift', (data) => {
-    try {
-        if (!data) return;
-        
-        const trackingId = `${data.userId}_${data.giftName}`;
-        let countToProcess = 0;
+    // ... [keep your combo tracking code here] ...
 
-        if (data.repeatEnd) {
-            countToProcess = data.repeatCount - (giftComboTracker[trackingId] || 0);
-            delete giftComboTracker[trackingId];
-        } else {
-            countToProcess = data.repeatCount - (giftComboTracker[trackingId] || 0);
-            giftComboTracker[trackingId] = data.repeatCount;
-        }
+    const country = countriesList.find(c => c.gift.toLowerCase() === data.giftName.toLowerCase());
+    if (!country) return;
 
-        if (countToProcess <= 0) return;
+    // 1. Add points
+    country.score += countToProcess;
+    
+    // 2. Calculate Wins (Every 50 points = 1 Win)
+    // This is what updates the podium!
+    country.wins = Math.floor(country.score / POINTS_PER_LAP);
+    
+    // 3. Update Position for the runner (0-85%)
+    country.currentPos = ((country.score % POINTS_PER_LAP) / POINTS_PER_LAP) * 85;
 
-        const country = countriesList.find(c => c.gift.toLowerCase() === data.giftName.toLowerCase());
-        if (!country) return;
+    // 4. THE FIX: Sort strictly by WINS first. 
+    // This ensures the person with 5 wins stays at 1st place 
+    // even if they just started a new lap.
+    const sortedByChampions = [...countriesList].sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins; // Highest wins first
+        return b.score - a.score; // If wins are tied, who is further in the current lap
+    });
 
-        // 1. Add points
-        country.score += countToProcess;
-        
-        // 2. Calculate New Wins
-        const oldWins = country.wins;
-        country.wins = Math.floor(country.score / POINTS_PER_LAP);
-        
-        // 3. Check if they just finished a lap (For that +1 feel)
-        if (country.wins > oldWins) {
-            console.log(`🏆 ${country.name} JUST WON A LAP! Total Wins: ${country.wins}`);
-        }
-
-        // 4. Update Position (0-85%)
-        // When they hit exactly 50, this becomes 0, starting them back at the left!
-        country.currentPos = ((country.score % POINTS_PER_LAP) / POINTS_PER_LAP) * 85;
-
-        // 5. SORT: Rank by Wins (Primary) and Score (Secondary)
-        const sortedRace = [...countriesList].sort((a, b) => {
-            if (b.wins !== a.wins) return b.wins - a.wins;
-            return b.score - a.score;
-        });
-
-        io.emit('updateRace', {
-            allCountries: sortedRace
-        });
-
-    } catch (err) {
-        console.error("❌ GIFT ERROR:", err);
-    }
+    io.emit('updateRace', {
+        allCountries: sortedByChampions
+    });
 });
+
 
 
 tiktok.on('connected', () => console.log(`✅ Game Connected: ${TARGET_USERNAME}`));
